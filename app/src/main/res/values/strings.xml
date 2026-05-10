@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">磁力搜索</string>
+    <string name="search_hint">搜索磁力资源...</string>
+    <string name="empty_result">未找到相关资源</string>
+    <string name="copy_success">已复制磁力链接</string>
+    <string name="delete_confirm">确定要删除吗？</string>
+    <string name="clear_confirm">确定要清空吗？</string>
+    <string name="yes">确定</string>
+    <string name="no">取消</string>
+</resources>
