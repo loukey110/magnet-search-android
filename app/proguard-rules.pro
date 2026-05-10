@@ -5,3 +5,5 @@
 -keep class com.magnet.search.data.model.** { *; }
 -keep class org.jsoup.** { *; }
 -keep class okhttp3.** { *; }
+-dontwarn org.jspecify.annotations.**
+-dontwarn javax.annotation.**
