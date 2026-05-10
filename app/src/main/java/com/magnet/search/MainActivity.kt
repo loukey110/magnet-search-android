@@ -1,6 +1,7 @@
 package com.magnet.search
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -16,20 +17,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        try {
-            binding = ActivityMainBinding.inflate(layoutInflater)
-            setContentView(binding.root)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-            setupBottomNavigation()
-            
-            if (savedInstanceState == null) {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainer, SearchFragment())
-                    .commit()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            finish()
+        if (!App.isInitialized || App.repository == null) {
+            Toast.makeText(this, "应用初始化失败，请重启应用", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        setupBottomNavigation()
+        
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, SearchFragment())
+                .commit()
         }
     }
 

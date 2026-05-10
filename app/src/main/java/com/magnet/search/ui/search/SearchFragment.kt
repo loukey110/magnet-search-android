@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -22,9 +23,7 @@ class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: SearchViewModel by viewModels {
-        SearchViewModelFactory(App.repository)
-    }
+    private var viewModel: SearchViewModel? = null
 
     private lateinit var adapter: MagnetAdapter
 
@@ -40,20 +39,24 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        try {
-            setupRecyclerView()
-            setupSearchBar()
-            setupObservers()
-            setupSwipeRefresh()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        val repo = App.repository
+        if (repo == null) {
+            Toast.makeText(requireContext(), "初始化失败", Toast.LENGTH_SHORT).show()
+            return
         }
+        
+        viewModel = SearchViewModel(repo)
+        
+        setupRecyclerView()
+        setupSearchBar()
+        setupObservers()
+        setupSwipeRefresh()
     }
 
     private fun setupRecyclerView() {
         adapter = MagnetAdapter(
             onCopyClick = { item -> copyMagnetLink(item) },
-            onFavoriteClick = { item -> viewModel.toggleFavorite(item) }
+            onFavoriteClick = { item -> viewModel?.toggleFavorite(item) }
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
@@ -76,9 +79,9 @@ class SearchFragment : Fragment() {
 
     private fun setupSwipeRefresh() {
         binding.swipeRefresh.setOnRefreshListener {
-            val keyword = viewModel.currentKeyword.value
+            val keyword = viewModel?.currentKeyword?.value ?: ""
             if (keyword.isNotEmpty()) {
-                viewModel.search(keyword)
+                viewModel?.search(keyword)
             } else {
                 binding.swipeRefresh.isRefreshing = false
             }
@@ -86,8 +89,10 @@ class SearchFragment : Fragment() {
     }
 
     private fun setupObservers() {
+        val vm = viewModel ?: return
+        
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.searchState.collect { state ->
+            vm.searchState.collect { state ->
                 when (state) {
                     is SearchState.Idle -> {
                         binding.swipeRefresh.isRefreshing = false
@@ -118,13 +123,13 @@ class SearchFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.searchResults.collect { results ->
+            vm.searchResults.collect { results ->
                 adapter.submitList(results)
                 binding.tvEmpty.visibility = if (results.isEmpty()) View.VISIBLE else View.GONE
             }
         }
 
-        viewModel.favoriteStatus.observe(viewLifecycleOwner) { statusMap ->
+        vm.favoriteStatus.observe(viewLifecycleOwner) { statusMap ->
             if (statusMap != null) {
                 adapter.setFavoriteStatusMap(statusMap)
             }
@@ -134,7 +139,7 @@ class SearchFragment : Fragment() {
     private fun performSearch() {
         val keyword = binding.etSearch.text.toString().trim()
         if (keyword.isNotEmpty()) {
-            viewModel.search(keyword)
+            viewModel?.search(keyword)
         }
     }
 

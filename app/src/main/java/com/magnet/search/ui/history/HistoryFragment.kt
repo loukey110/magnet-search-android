@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.magnet.search.App
@@ -19,11 +19,7 @@ class HistoryFragment : Fragment() {
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: HistoryViewModel by viewModels {
-        HistoryViewModelFactory(App.repository)
-    }
-
-    private lateinit var adapter: HistoryAdapter
+    private var viewModel: HistoryViewModel? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,26 +33,27 @@ class HistoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        try {
-            setupRecyclerView()
-            setupObservers()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        val repo = App.repository
+        if (repo == null) {
+            Toast.makeText(requireContext(), "初始化失败", Toast.LENGTH_SHORT).show()
+            return
         }
+        
+        viewModel = HistoryViewModel(repo)
+        
+        setupRecyclerView()
     }
 
     private fun setupRecyclerView() {
-        adapter = HistoryAdapter(
+        val adapter = HistoryAdapter(
             onItemClick = { keyword -> searchWithKeyword(keyword) },
-            onDeleteClick = { keyword -> viewModel.removeHistory(keyword) }
+            onDeleteClick = { keyword -> viewModel?.removeHistory(keyword) }
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
-    }
-
-    private fun setupObservers() {
+        
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.history.collect { history ->
+            viewModel?.history?.collect { history ->
                 adapter.submitList(history)
                 binding.tvEmpty.visibility = if (history.isEmpty()) View.VISIBLE else View.GONE
             }
