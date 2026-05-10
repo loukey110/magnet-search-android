@@ -16,13 +16,6 @@ class MagnetAdapter(
 
     private val favoriteStatus = mutableMapOf<String, Boolean>()
 
-    fun updateFavoriteStatus(magnetLink: String, isFavorite: Boolean) {
-        favoriteStatus[magnetLink] = isFavorite
-        currentList.indexOfFirst { it.magnetLink == magnetLink }.let { position ->
-            if (position >= 0) notifyItemChanged(position)
-        }
-    }
-
     fun setFavoriteStatusMap(map: Map<String, Boolean>) {
         favoriteStatus.clear()
         favoriteStatus.putAll(map)
@@ -47,30 +40,23 @@ class MagnetAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: MagnetItem) {
-            binding.apply {
-                tvTitle.text = item.title
-                tvSize.text = item.fileSize.ifEmpty { "未知大小" }
-                tvSource.text = item.sourceName
-                
-                val info = mutableListOf<String>()
-                if (item.uploadDate.isNotEmpty()) info.add(item.uploadDate)
-                if (item.seeders > 0) info.add("种子: ${item.seeders}")
-                if (item.leechers > 0) info.add("下载: ${item.leechers}")
-                tvInfo.text = info.joinToString(" | ")
-                
-                val isFav = favoriteStatus[item.magnetLink] ?: false
-                btnFavorite.setIconResource(
-                    if (isFav) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_outline
-                )
-                
-                btnCopy.setOnClickListener { onCopyClick(item) }
-                btnFavorite.setOnClickListener { onFavoriteClick(item) }
-                
-                root.setOnLongClickListener {
-                    onCopyClick(item)
-                    true
-                }
-            }
+            binding.tvTitle.text = item.title
+            binding.tvSize.text = if (item.fileSize.isNotEmpty()) item.fileSize else "未知大小"
+            binding.tvSource.text = item.sourceName
+            
+            val infoList = mutableListOf<String>()
+            if (item.uploadDate.isNotEmpty()) infoList.add(item.uploadDate)
+            if (item.seeders > 0) infoList.add("种子: ${item.seeders}")
+            if (item.leechers > 0) infoList.add("下载: ${item.leechers}")
+            binding.tvInfo.text = infoList.joinToString(" | ")
+            
+            val isFav = favoriteStatus[item.magnetLink] ?: false
+            binding.btnFavorite.setIconResource(
+                if (isFav) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_outline
+            )
+            
+            binding.btnCopy.setOnClickListener { onCopyClick(item) }
+            binding.btnFavorite.setOnClickListener { onFavoriteClick(item) }
         }
     }
 

@@ -12,7 +12,5 @@
         <item name="colorSurface">@android:color/white</item>
         <item name="colorOnSurface">#212121</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/white</item>
-        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

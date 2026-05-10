@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.room.Room
 import com.magnet.search.data.local.AppDatabase
 import com.magnet.search.domain.MagnetRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 
 class App : Application() {
 
@@ -14,16 +16,26 @@ class App : Application() {
         private const val TAG = "MagnetSearch"
     }
 
+    private val applicationScope = CoroutineScope(SupervisorJob())
+
     override fun onCreate() {
         super.onCreate()
         instance = this
         
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            Log.e(TAG, "Uncaught exception in thread: ${thread.name}", throwable)
+        }
+        
         try {
+            Log.d(TAG, "Initializing application...")
+            
             val database = Room.databaseBuilder(
                 applicationContext,
                 AppDatabase::class.java,
                 "magnet_search.db"
-            ).fallbackToDestructiveMigration()
+            )
+                .fallbackToDestructiveMigration()
+                .allowMainThreadQueries()
                 .build()
 
             repository = MagnetRepository(
@@ -34,7 +46,6 @@ class App : Application() {
             Log.d(TAG, "Application initialized successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize application", e)
-            throw e
         }
     }
 }

@@ -31,19 +31,12 @@ class FavoriteAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: Favorite) {
-            binding.apply {
-                tvTitle.text = item.title
-                tvSize.text = item.fileSize.ifEmpty { "" }
-                tvSource.text = item.sourceName
-                
-                btnCopy.setOnClickListener { onCopyClick(item) }
-                btnDelete.setOnClickListener { onDeleteClick(item) }
-                
-                root.setOnLongClickListener {
-                    onCopyClick(item)
-                    true
-                }
-            }
+            binding.tvTitle.text = item.title
+            binding.tvSize.text = if (item.fileSize.isNotEmpty()) item.fileSize else ""
+            binding.tvSource.text = item.sourceName
+            
+            binding.btnCopy.setOnClickListener { onCopyClick(item) }
+            binding.btnDelete.setOnClickListener { onDeleteClick(item) }
         }
     }
 

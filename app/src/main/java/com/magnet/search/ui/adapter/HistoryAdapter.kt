@@ -31,11 +31,9 @@ class HistoryAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: SearchHistory) {
-            binding.apply {
-                tvKeyword.text = item.keyword
-                root.setOnClickListener { onItemClick(item.keyword) }
-                btnDelete.setOnClickListener { onDeleteClick(item.keyword) }
-            }
+            binding.tvKeyword.text = item.keyword
+            binding.root.setOnClickListener { onItemClick(item.keyword) }
+            binding.btnDelete.setOnClickListener { onDeleteClick(item.keyword) }
         }
     }
 

@@ -8,11 +8,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.magnet.search.App
+import com.magnet.search.R
 import com.magnet.search.databinding.FragmentHistoryBinding
 import com.magnet.search.ui.adapter.HistoryAdapter
-import com.magnet.search.ui.search.SearchFragment
 import kotlinx.coroutines.launch
 
 class HistoryFragment : Fragment() {
@@ -37,9 +36,13 @@ class HistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
-        setupObservers()
-        setupClearButton()
+        
+        try {
+            setupRecyclerView()
+            setupObservers()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -47,10 +50,8 @@ class HistoryFragment : Fragment() {
             onItemClick = { keyword -> searchWithKeyword(keyword) },
             onDeleteClick = { keyword -> viewModel.removeHistory(keyword) }
         )
-        binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@HistoryFragment.adapter
-        }
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.adapter = adapter
     }
 
     private fun setupObservers() {
@@ -62,35 +63,16 @@ class HistoryFragment : Fragment() {
         }
     }
 
-    private fun setupClearButton() {
-        binding.btnClear.setOnClickListener {
-            showClearDialog()
-        }
-    }
-
     private fun searchWithKeyword(keyword: String) {
-        requireActivity().supportFragmentManager.beginTransaction()
-            .replace(com.magnet.search.R.id.fragmentContainer, SearchFragment().apply {
-                arguments = Bundle().apply {
-                    putString("keyword", keyword)
-                }
-            })
-            .commit()
-        
-        requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-            com.magnet.search.R.id.bottomNavigation
-        ).selectedItemId = com.magnet.search.R.id.nav_search
-    }
-
-    private fun showClearDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("清空历史")
-            .setMessage("确定要清空所有搜索历史吗？")
-            .setPositiveButton("清空") { _, _ ->
-                viewModel.clearAll()
-            }
-            .setNegativeButton("取消", null)
-            .show()
+        activity?.let { act ->
+            act.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                R.id.bottomNavigation
+            )?.selectedItemId = R.id.nav_search
+            
+            act.supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, com.magnet.search.ui.search.SearchFragment())
+                .commit()
+        }
     }
 
     override fun onDestroyView() {

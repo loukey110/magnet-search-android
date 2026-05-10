@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.magnet.search.App
 import com.magnet.search.data.model.Favorite
 import com.magnet.search.databinding.FragmentFavoritesBinding
@@ -38,19 +37,22 @@ class FavoritesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
-        setupObservers()
+        
+        try {
+            setupRecyclerView()
+            setupObservers()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun setupRecyclerView() {
         adapter = FavoriteAdapter(
             onCopyClick = { item -> copyMagnetLink(item) },
-            onDeleteClick = { item -> showDeleteDialog(item) }
+            onDeleteClick = { item -> viewModel.removeFavorite(item) }
         )
-        binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@FavoritesFragment.adapter
-        }
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.adapter = adapter
     }
 
     private fun setupObservers() {
@@ -64,17 +66,6 @@ class FavoritesFragment : Fragment() {
 
     private fun copyMagnetLink(item: Favorite) {
         ClipboardUtils.copyMagnetLink(requireContext(), item.magnetLink)
-    }
-
-    private fun showDeleteDialog(item: Favorite) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("删除收藏")
-            .setMessage("确定要删除此收藏吗？")
-            .setPositiveButton("删除") { _, _ ->
-                viewModel.removeFavorite(item)
-            }
-            .setNegativeButton("取消", null)
-            .show()
     }
 
     override fun onDestroyView() {

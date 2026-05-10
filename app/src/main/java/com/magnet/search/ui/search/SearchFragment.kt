@@ -9,11 +9,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.magnet.search.App
 import com.magnet.search.R
 import com.magnet.search.data.model.MagnetItem
-import com.magnet.search.data.model.SearchRule
 import com.magnet.search.databinding.FragmentSearchBinding
 import com.magnet.search.ui.adapter.MagnetAdapter
 import com.magnet.search.utils.ClipboardUtils
@@ -29,7 +27,6 @@ class SearchFragment : Fragment() {
     }
 
     private lateinit var adapter: MagnetAdapter
-    private var selectedRuleId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,10 +39,15 @@ class SearchFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
-        setupSearchBar()
-        setupObservers()
-        setupSwipeRefresh()
+        
+        try {
+            setupRecyclerView()
+            setupSearchBar()
+            setupObservers()
+            setupSwipeRefresh()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -53,11 +55,8 @@ class SearchFragment : Fragment() {
             onCopyClick = { item -> copyMagnetLink(item) },
             onFavoriteClick = { item -> viewModel.toggleFavorite(item) }
         )
-        binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@SearchFragment.adapter
-            setHasFixedSize(true)
-        }
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.adapter = adapter
     }
 
     private fun setupSearchBar() {
@@ -72,10 +71,6 @@ class SearchFragment : Fragment() {
 
         binding.btnSearch.setOnClickListener {
             performSearch()
-        }
-
-        binding.btnFilter.setOnClickListener {
-            showSourceSelector()
         }
     }
 
@@ -94,11 +89,30 @@ class SearchFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchState.collect { state ->
                 when (state) {
-                    is SearchState.Idle -> showIdle()
-                    is SearchState.Loading -> showLoading()
-                    is SearchState.LoadingMore -> showLoadingMore()
-                    is SearchState.Success -> showSuccess(state.count)
-                    is SearchState.Error -> showError(state.message)
+                    is SearchState.Idle -> {
+                        binding.swipeRefresh.isRefreshing = false
+                        binding.progressBar.visibility = View.GONE
+                        binding.tvError.visibility = View.GONE
+                    }
+                    is SearchState.Loading -> {
+                        binding.swipeRefresh.isRefreshing = true
+                        binding.progressBar.visibility = View.VISIBLE
+                        binding.tvError.visibility = View.GONE
+                    }
+                    is SearchState.LoadingMore -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+                    is SearchState.Success -> {
+                        binding.swipeRefresh.isRefreshing = false
+                        binding.progressBar.visibility = View.GONE
+                        binding.tvError.visibility = View.GONE
+                    }
+                    is SearchState.Error -> {
+                        binding.swipeRefresh.isRefreshing = false
+                        binding.progressBar.visibility = View.GONE
+                        binding.tvError.visibility = View.VISIBLE
+                        binding.tvError.text = state.message
+                    }
                 }
             }
         }
@@ -111,7 +125,9 @@ class SearchFragment : Fragment() {
         }
 
         viewModel.favoriteStatus.observe(viewLifecycleOwner) { statusMap ->
-            adapter.setFavoriteStatusMap(statusMap)
+            if (statusMap != null) {
+                adapter.setFavoriteStatusMap(statusMap)
+            }
         }
     }
 
@@ -122,53 +138,8 @@ class SearchFragment : Fragment() {
         }
     }
 
-    private fun showSourceSelector() {
-        val rules = viewModel.rules
-        if (rules.isEmpty()) return
-
-        val names = arrayOf("全部来源") + rules.map { it.name }.toTypedArray()
-        val selected = if (selectedRuleId == null) 0 else rules.indexOfFirst { it.id == selectedRuleId } + 1
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("选择搜索源")
-            .setSingleChoiceItems(names, selected) { dialog, which ->
-                selectedRuleId = if (which == 0) null else rules[which - 1].id
-                dialog.dismiss()
-            }
-            .show()
-    }
-
     private fun copyMagnetLink(item: MagnetItem) {
         ClipboardUtils.copyMagnetLink(requireContext(), item.magnetLink)
-    }
-
-    private fun showIdle() {
-        binding.swipeRefresh.isRefreshing = false
-        binding.progressBar.visibility = View.GONE
-        binding.tvError.visibility = View.GONE
-    }
-
-    private fun showLoading() {
-        binding.swipeRefresh.isRefreshing = true
-        binding.progressBar.visibility = View.VISIBLE
-        binding.tvError.visibility = View.GONE
-    }
-
-    private fun showLoadingMore() {
-        binding.progressBar.visibility = View.VISIBLE
-    }
-
-    private fun showSuccess(count: Int) {
-        binding.swipeRefresh.isRefreshing = false
-        binding.progressBar.visibility = View.GONE
-        binding.tvError.visibility = View.GONE
-    }
-
-    private fun showError(message: String) {
-        binding.swipeRefresh.isRefreshing = false
-        binding.progressBar.visibility = View.GONE
-        binding.tvError.visibility = View.VISIBLE
-        binding.tvError.text = message
     }
 
     override fun onDestroyView() {
