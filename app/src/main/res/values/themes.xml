@@ -4,13 +4,5 @@
         <item name="colorPrimary">#2196F3</item>
         <item name="colorPrimaryVariant">#1976D2</item>
         <item name="colorOnPrimary">@android:color/white</item>
-        <item name="colorSecondary">#FF5722</item>
-        <item name="colorSecondaryVariant">#E64A19</item>
-        <item name="colorOnSecondary">@android:color/white</item>
-        <item name="colorError">#F44336</item>
-        <item name="colorOnError">@android:color/white</item>
-        <item name="colorSurface">@android:color/white</item>
-        <item name="colorOnSurface">#212121</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 </resources>
