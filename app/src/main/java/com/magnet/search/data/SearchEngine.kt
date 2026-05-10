@@ -74,6 +74,6 @@ object SearchEngine {
             e.printStackTrace()
         }
         
-        items
+        return items
     }
 }
